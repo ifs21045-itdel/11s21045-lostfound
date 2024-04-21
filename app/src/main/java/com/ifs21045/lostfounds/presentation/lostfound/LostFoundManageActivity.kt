@@ -3,6 +3,7 @@ package com.ifs21045.lostfounds.presentation.lostfound
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
+import android.view.View
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
@@ -13,7 +14,6 @@ import com.ifs21045.lostfounds.data.remote.MyResult
 import com.ifs21045.lostfounds.databinding.ActivityLostfoundManageBinding
 import com.ifs21045.lostfounds.helper.Utils.Companion.observeOnce
 import com.ifs21045.lostfounds.presentation.ViewModelFactory
-
 class LostFoundManageActivity : AppCompatActivity() {
     private lateinit var binding: ActivityLostfoundManageBinding
     private val viewModel by viewModels<LostFoundViewModel> {
@@ -24,18 +24,19 @@ class LostFoundManageActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityLostfoundManageBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        setupView()
         setupAtion()
     }
 
+    private fun setupView() {
+        showLoading(false)
+    }
 
     private val launcher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
         if (result.resultCode == RESULT_OK) {
             val selectedImageUri = result.data?.data
-            // Lakukan sesuatu dengan URI gambar yang dipilih
-            // Misalnya, tampilkan gambar tersebut di ImageView
-
         }
     }
 
@@ -72,7 +73,7 @@ class LostFoundManageActivity : AppCompatActivity() {
     private fun manageAddLostFound() {
 
         binding.apply {
-            appbarLostFoundManage.title = "Tambah Lost And Found"
+            appbarLostFoundManage.title = "Tambah Todo"
 
             btnLostFoundManageSave.setOnClickListener {
                 val title = etLostFoundManageTitle.text.toString()
@@ -126,7 +127,7 @@ class LostFoundManageActivity : AppCompatActivity() {
 
     private fun manageEditTodo(todo: LostFound) {
         binding.apply {
-            appbarLostFoundManage.title = "Ubah LostAnd Found"
+            appbarLostFoundManage.title = "Ubah Todo"
 
             etLostFoundManageTitle.setText(todo.title)
             etLostFoundManageDesc.setText(todo.description)
@@ -198,7 +199,8 @@ class LostFoundManageActivity : AppCompatActivity() {
     }
 
     private fun showLoading(isLoading: Boolean) {
-
+        binding.pbLostFoundManage.visibility =
+            if (isLoading) View.VISIBLE else View.GONE
 
         binding.btnLostFoundManageSave.isActivated = !isLoading
 

@@ -24,6 +24,7 @@ import com.ifs21045.lostfounds.helper.Utils.Companion.observeOnce
 import com.ifs21045.lostfounds.presentation.ViewModelFactory
 import com.ifs21045.lostfounds.presentation.login.LoginActivity
 import com.ifs21045.lostfounds.presentation.lostfound.LostFoundDetailActivity
+import com.ifs21045.lostfounds.presentation.lostfound.LostFoundFavoriteActivity
 import com.ifs21045.lostfounds.presentation.lostfound.LostFoundManageActivity
 import com.ifs21045.lostfounds.presentation.profile.ProfileActivity
 
@@ -36,8 +37,21 @@ class MainActivity : AppCompatActivity() {
     private val launcher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
-        if (result.resultCode == LostFoundManageActivity.RESULT_CODE || result.resultCode == LostFoundDetailActivity.RESULT_CODE) {
+        if (result.resultCode == LostFoundManageActivity.RESULT_CODE) {
             recreate()
+        }
+
+        if (result.resultCode == LostFoundDetailActivity.RESULT_CODE) {
+            result.data?.let {
+                val isChanged = it.getBooleanExtra(
+                    LostFoundDetailActivity.KEY_IS_CHANGED,
+                    false
+                )
+
+                if (isChanged) {
+                    recreate()
+                }
+            }
         }
     }
 
@@ -59,7 +73,7 @@ class MainActivity : AppCompatActivity() {
             ContextCompat
                 .getDrawable(this, R.drawable.ic_more_vert_24)
 
-        observeGetAllTodos() // Memuat All Lost Found saat activity dibuat
+        observeGetAll()
     }
 
     private fun setupAction() {
@@ -77,15 +91,19 @@ class MainActivity : AppCompatActivity() {
                 }
 
                 R.id.mainMenuMyLost -> {
-                    observeGetTodos() // Memuat My Lost Found saat item menu My Lost Found diklik
+                    observeGetMine()
                     true
                 }
 
                 R.id.mainMenuAllLost -> {
-                    observeGetAllTodos() // Memuat All Lost Found saat item menu All Lost Found diklik
+                    observeGetAll()
                     true
                 }
 
+                R.id.mainMenuFavoriteTodos -> {
+                    openFavoriteLostFoundActivity()
+                    true
+                }
                 else -> false
             }
         }
@@ -103,41 +121,61 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun observeGetTodos() {
+    private fun observeGetMine() {
         viewModel.getTodos().observe(this) { result ->
-            handleResult(result)
+            if (result != null) {
+                when (result) {
+                    is MyResult.Loading -> {
+                        showLoading(true)
+                    }
+
+                    is MyResult.Success -> {
+                        showLoading(false)
+                        loadAllToLayout(result.data)
+                    }
+
+                    is MyResult.Error -> {
+                        showLoading(false)
+                        showEmptyError(true)
+                    }
+                }
+            }
         }
     }
 
-    private fun observeGetAllTodos() {
+    private fun observeGetAll() {
         viewModel.getAllTodos().observe(this) { result ->
-            handleResult(result)
-        }
-    }
+            if (result != null) {
+                when (result) {
+                    is MyResult.Loading -> {
+                        showLoading(true)
+                    }
 
-    private fun handleResult(result: MyResult<DelcomLostFoundsResponse>) {
-        when (result) {
-            is MyResult.Loading -> {
-                showLoading(true)
-            }
+                    is MyResult.Success -> {
+                        showLoading(false)
+                        loadAllToLayout(result.data)
+                    }
 
-            is MyResult.Success -> {
-                showLoading(false)
-                loadAllToLayout(result.data)
-            }
-
-            is MyResult.Error -> {
-                showLoading(false)
-                showEmptyError(true)
+                    is MyResult.Error -> {
+                        showLoading(false)
+                        showEmptyError(true)
+                    }
+                }
             }
         }
     }
 
     private fun loadAllToLayout(response: DelcomLostFoundsResponse) {
         // Periksa apakah response atau data pada response null
-        if (response == null || response.data == null || response.data.todos == null) {
+        if (response == null) {
             // Handle null case appropriately, misalnya menampilkan pesan error atau melakukan tindakan lainnya
-            Log.e("MainActivity", "Response or data is null")
+            Log.e("MainActivity", "response == null")
+            return
+        } else if (response.data == null){
+            Log.e("MainActivity", "response.data == null")
+            return
+        } else if (response.data.todos == null){
+            Log.e("MainActivity", "response.data.todos == null")
             return
         }
 
@@ -186,7 +224,7 @@ class MainActivity : AppCompatActivity() {
                                 } else {
                                     Toast.makeText(
                                         this@MainActivity,
-                                        "Gagal batal menyelesaikan : " + todo.title,
+                                        "Gagal batal menyelesaikan todo: " + todo.title,
                                         Toast.LENGTH_SHORT
                                     ).show()
                                 }
@@ -196,13 +234,13 @@ class MainActivity : AppCompatActivity() {
                                 if (isChecked) {
                                     Toast.makeText(
                                         this@MainActivity,
-                                        "Berhasil menyelesaikan: " + todo.title,
+                                        "Berhasil menyelesaikan todo: " + todo.title,
                                         Toast.LENGTH_SHORT
                                     ).show()
                                 } else {
                                     Toast.makeText(
                                         this@MainActivity,
-                                        "Berhasil batal menyelesaikan : " + todo.title,
+                                        "Berhasil batal menyelesaikan todo: " + todo.title,
                                         Toast.LENGTH_SHORT
                                     ).show()
                                 }
@@ -240,7 +278,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showLoading(isLoading: Boolean) {
-        binding.pbMain.visibility = if (isLoading) View.VISIBLE else View.GONE
+        binding.pbMain.visibility =
+            if (isLoading) View.VISIBLE else View.GONE
     }
 
     private fun openProfileActivity() {
@@ -249,24 +288,40 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showComponentNotEmpty(status: Boolean) {
-        binding.svMain.visibility = if (status) View.VISIBLE else View.GONE
-        binding.rvMainTodos.visibility = if (status) View.VISIBLE else View.GONE
+        binding.svMain.visibility =
+            if (status) View.VISIBLE else View.GONE
+
+        binding.rvMainTodos.visibility =
+            if (status) View.VISIBLE else View.GONE
     }
 
     private fun showEmptyError(isError: Boolean) {
-        binding.tvMainEmptyError.visibility = if (isError) View.VISIBLE else View.GONE
+        binding.tvMainEmptyError.visibility =
+            if (isError) View.VISIBLE else View.GONE
     }
 
     private fun openLoginActivity() {
         val intent = Intent(applicationContext, LoginActivity::class.java)
-        intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK
+        intent.flags =
+            Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK
         startActivity(intent)
         finish()
     }
 
     private fun openAddLostFoundActivity() {
-        val intent = Intent(this@MainActivity, LostFoundManageActivity::class.java)
+        val intent = Intent(
+            this@MainActivity,
+            LostFoundManageActivity::class.java
+        )
         intent.putExtra(LostFoundManageActivity.KEY_IS_ADD, true)
+        launcher.launch(intent)
+    }
+
+    private fun openFavoriteLostFoundActivity() {
+        val intent = Intent(
+            this@MainActivity,
+            LostFoundFavoriteActivity::class.java
+        )
         launcher.launch(intent)
     }
 }

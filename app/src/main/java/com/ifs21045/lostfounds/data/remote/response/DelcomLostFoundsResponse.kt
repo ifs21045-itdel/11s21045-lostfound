@@ -36,7 +36,7 @@ data class LostFoundsItemResponse(
 	val status: String,
 
 	@field:SerializedName("is_completed")
-  	var isCompleted: Int,
+	var isCompleted: Int,
 
 	@field:SerializedName("is_me")
 	var isMe: Int
