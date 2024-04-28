@@ -12,6 +12,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import com.bumptech.glide.Glide
 import com.ifs18005.delcomtodo.data.remote.response.LostFoundResponse
 import com.ifs21045.lostfounds.R
 import com.ifs21045.lostfounds.data.local.entity.DelcomLostFoundEntity
@@ -102,6 +103,16 @@ class LostFoundDetailActivity : AppCompatActivity() {
                 tvLostFoundDetailTitle.text = todo.title
                 tvLostFoundDetailDate.text = "Diposting pada: ${todo.createdAt}"
                 tvLostFoundDetailDesc.text = todo.description
+
+                if(todo.cover != null){
+                    ivLostFoundDetailCover.visibility=View.VISIBLE
+                    Glide.with(this@LostFoundDetailActivity)
+                        .load(todo.cover)
+                        .placeholder(R.drawable.ic_image_24)
+                        .into(ivLostFoundDetailCover)
+                }else{
+                    ivLostFoundDetailCover.visibility = View.GONE
+                }
 
                 viewModel.getLocalLostFound(todo.id).observeOnce {
                     if(it != null){

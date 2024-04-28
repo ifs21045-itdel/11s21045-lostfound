@@ -3,6 +3,7 @@ package com.ifs21045.lostfounds.presentation.lostfound
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.asLiveData
+import okhttp3.MultipartBody
 import com.ifs18005.delcomtodo.data.remote.response.DataAddLostFoundResponse
 import com.ifs18005.delcomtodo.data.remote.response.DelcomLostFoundResponse
 import com.ifs18005.delcomtodo.data.remote.response.DelcomResponse
@@ -66,6 +67,14 @@ class LostFoundViewModel (
     fun deleteLocalTodo(todo: DelcomLostFoundEntity) {
         LocalLostFoundRepository.delete(todo)
     }
+
+    fun addCoverLostFound(
+        lostfoundId: Int,
+        cover: MultipartBody.Part,
+    ): LiveData<MyResult<DelcomResponse>> {
+        return lostFoundRepository.addCoverLostFound(lostfoundId, cover).asLiveData()
+    }
+
 
     companion object {
         @Volatile

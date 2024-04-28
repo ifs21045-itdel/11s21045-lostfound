@@ -3,7 +3,7 @@
 
 
     <string-array name="status">
-        <item>Lost</item>
-        <item>Found</item>
+        <item>lost</item>
+        <item>found</item>
     </string-array>
 </resources>
