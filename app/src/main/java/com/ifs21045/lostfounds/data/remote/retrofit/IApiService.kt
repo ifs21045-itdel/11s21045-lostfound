@@ -6,18 +6,10 @@ import com.ifs18005.delcomtodo.data.remote.response.DelcomResponse
 import com.ifs18005.delcomtodo.data.remote.response.DelcomLostFoundResponse
 import com.ifs18005.delcomtodo.data.remote.response.DelcomLostFoundsResponse
 import com.ifs18005.delcomtodo.data.remote.response.DelcomUserResponse
+import com.ifs18005.delcomtodo.data.remote.response.LostFoundsItemResponse
 import okhttp3.MultipartBody
-
-import retrofit2.http.DELETE
-import retrofit2.http.Field
-import retrofit2.http.FormUrlEncoded
-import retrofit2.http.GET
-import retrofit2.http.Multipart
-import retrofit2.http.POST
-import retrofit2.http.PUT
-import retrofit2.http.Part
-import retrofit2.http.Path
-import retrofit2.http.Query
+import retrofit2.Response
+import retrofit2.http.*
 
 interface IApiService {
     @FormUrlEncoded
@@ -82,7 +74,10 @@ interface IApiService {
 
     @Multipart
     @POST("users/photo")
-    suspend fun  addphoto(
-        @Part photo :MultipartBody.Part,
-    ):DelcomResponse
+    suspend fun addphoto(
+        @Part photo: MultipartBody.Part,
+    ): DelcomResponse
+
+    @GET("lost-items")
+    suspend fun getLostItems(): Response<List<LostFoundsItemResponse>>
 }

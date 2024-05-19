@@ -6,6 +6,7 @@ import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
 import com.ifs18005.delcomtodo.data.remote.response.DelcomLostFoundsResponse
 import com.ifs18005.delcomtodo.data.remote.response.DelcomResponse
+import com.ifs18005.delcomtodo.data.remote.response.LostFoundsItemResponse
 import com.ifs21045.lostfounds.data.pref.UserModel
 import com.ifs21045.lostfounds.data.remote.MyResult
 import com.ifs21045.lostfounds.data.repository.AuthRepository
@@ -36,6 +37,14 @@ class MainViewModel(
         return lostFoundRepository.getAll(null, 0, null).asLiveData()
     }
 
+    fun getLostItems(): LiveData<MyResult<List<LostFoundsItemResponse>>> {
+        return lostFoundRepository.getLostItems().asLiveData()
+    }
+
+    fun getTodosByStatus(status: String): LiveData<MyResult<DelcomLostFoundsResponse>> {
+        return lostFoundRepository.getAll(null, null, status).asLiveData()
+    }
+
     fun putTodo(
         lostfoundId: Int,
         title: String,
@@ -60,10 +69,12 @@ class MainViewModel(
             lostFoundRepository: LostFoundRepository
         ): MainViewModel {
             synchronized(ViewModelFactory::class.java) {
-                INSTANCE = MainViewModel(
-                    authRepository,
-                    lostFoundRepository
-                )
+                if (INSTANCE == null) {
+                    INSTANCE = MainViewModel(
+                        authRepository,
+                        lostFoundRepository
+                    )
+                }
             }
             return INSTANCE as MainViewModel
         }

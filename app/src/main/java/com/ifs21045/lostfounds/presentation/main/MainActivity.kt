@@ -104,6 +104,16 @@ class MainActivity : AppCompatActivity() {
                     openFavoriteLostFoundActivity()
                     true
                 }
+
+                R.id.mainMenuLostTodos -> {
+                    observeGetByStatus("lost")
+                    true
+                }
+
+                R.id.mainMenuFoundTodos -> {
+                    observeGetByStatus("found")
+                    true
+                }
                 else -> false
             }
         }
@@ -145,6 +155,28 @@ class MainActivity : AppCompatActivity() {
 
     private fun observeGetAll() {
         viewModel.getAllTodos().observe(this) { result ->
+            if (result != null) {
+                when (result) {
+                    is MyResult.Loading -> {
+                        showLoading(true)
+                    }
+
+                    is MyResult.Success -> {
+                        showLoading(false)
+                        loadAllToLayout(result.data)
+                    }
+
+                    is MyResult.Error -> {
+                        showLoading(false)
+                        showEmptyError(true)
+                    }
+                }
+            }
+        }
+    }
+
+    private fun observeGetByStatus(status: String) {
+        viewModel.getTodosByStatus(status).observe(this) { result ->
             if (result != null) {
                 when (result) {
                     is MyResult.Loading -> {

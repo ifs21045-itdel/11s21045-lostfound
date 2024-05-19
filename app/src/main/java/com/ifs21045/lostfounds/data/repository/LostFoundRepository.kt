@@ -2,12 +2,12 @@ package com.ifs21045.lostfounds.data.repository
 
 import com.google.gson.Gson
 import com.ifs18005.delcomtodo.data.remote.response.DelcomResponse
+import com.ifs18005.delcomtodo.data.remote.response.LostFoundsItemResponse
 import com.ifs21045.lostfounds.data.remote.MyResult
 import com.ifs21045.lostfounds.data.remote.retrofit.IApiService
 import kotlinx.coroutines.flow.flow
 import retrofit2.HttpException
 import okhttp3.MultipartBody
-
 
 class LostFoundRepository private constructor(
     private val apiService: IApiService,
@@ -19,14 +19,12 @@ class LostFoundRepository private constructor(
     ) = flow {
         emit(MyResult.Loading)
         try {
-            //get success message
             emit(
                 MyResult.Success(
                     apiService.postLostFound(title, description, status).data
                 )
             )
         } catch (e: HttpException) {
-            //get error message
             val jsonInString = e.response()?.errorBody()?.string()
             emit(
                 MyResult.Error(
@@ -47,7 +45,6 @@ class LostFoundRepository private constructor(
     ) = flow {
         emit(MyResult.Loading)
         try {
-            //get success message
             emit(
                 MyResult.Success(
                     apiService.putLostFound(
@@ -60,7 +57,6 @@ class LostFoundRepository private constructor(
                 )
             )
         } catch (e: HttpException) {
-            //get error message
             val jsonInString = e.response()?.errorBody()?.string()
             emit(
                 MyResult.Error(
@@ -79,10 +75,8 @@ class LostFoundRepository private constructor(
     ) = flow {
         emit(MyResult.Loading)
         try {
-            //get success message
             emit(MyResult.Success(apiService.getAll(isCompleted, isMe, status)))
         } catch (e: HttpException) {
-            //get error message
             val jsonInString = e.response()?.errorBody()?.string()
             emit(
                 MyResult.Error(
@@ -99,10 +93,8 @@ class LostFoundRepository private constructor(
     ) = flow {
         emit(MyResult.Loading)
         try {
-            //get success message
             emit(MyResult.Success(apiService.getDetail(lostFoundId)))
         } catch (e: HttpException) {
-            //get error message
             val jsonInString = e.response()?.errorBody()?.string()
             emit(
                 MyResult.Error(
@@ -119,10 +111,8 @@ class LostFoundRepository private constructor(
     ) = flow {
         emit(MyResult.Loading)
         try {
-            //get success message
             emit(MyResult.Success(apiService.delete(lostFoundId)))
         } catch (e: HttpException) {
-            //get error message
             val jsonInString = e.response()?.errorBody()?.string()
             emit(
                 MyResult.Error(
@@ -140,10 +130,31 @@ class LostFoundRepository private constructor(
     ) = flow {
         emit(MyResult.Loading)
         try {
-            //get success message
             emit(MyResult.Success(apiService.addCoverLostFound(todoId, cover)))
         } catch (e: HttpException) {
-            //get error message
+            val jsonInString = e.response()?.errorBody()?.string()
+            emit(
+                MyResult.Error(
+                    Gson()
+                        .fromJson(jsonInString, DelcomResponse::class.java)
+                        .message
+                )
+            )
+        }
+    }
+
+    fun getLostItems() = flow {
+        emit(MyResult.Loading)
+        try {
+            val response = apiService.getLostItems()
+            if (response.isSuccessful) {
+                response.body()?.let {
+                    emit(MyResult.Success(it))
+                } ?: emit(MyResult.Error("Data is null"))
+            } else {
+                emit(MyResult.Error("Failed to load data"))
+            }
+        } catch (e: HttpException) {
             val jsonInString = e.response()?.errorBody()?.string()
             emit(
                 MyResult.Error(
@@ -162,9 +173,9 @@ class LostFoundRepository private constructor(
             apiService: IApiService,
         ): LostFoundRepository {
             synchronized(LostFoundRepository::class.java) {
-                INSTANCE = LostFoundRepository(
-                    apiService
-                )
+                if (INSTANCE == null) {
+                    INSTANCE = LostFoundRepository(apiService)
+                }
             }
             return INSTANCE as LostFoundRepository
         }
